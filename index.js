@@ -11,8 +11,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require("bcrypt");
 const { boolean } = require('webidl-conversions');
 app.use(cors());
-
-
 require('dotenv').config();
 // Set up session middleware
 app.use(
@@ -409,7 +407,7 @@ app.get('/findorganizers', authenticateToken, async (req, res) => {
   }
 });
 
-app.listen(() => {
+app.listen(3002,() => {
   console.log('Server is listening');
 });
 module.exports = app;
