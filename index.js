@@ -92,7 +92,12 @@ const ProfileData = new mongoose.Schema({
   id:ObjectId,
   username:String,
   image: { type: Buffer, required: true },
+  gender:String,
+  age:String,
+  contact:String,
+  intrest:String,
 });
+
 // Step 2: Create a Mongoose model for LoginCredential
 const LoginCredential = mongoose.model('login-credential', LoginCredentialSchema, 'login-credential');
 
@@ -387,9 +392,11 @@ app.post('/photosave', authenticateToken, save.single('image'), async (req, res)
   findUser = await profileData.findOne({username:decodedToken.username})
   if (findUser){
     res.send({ success: false, data: imageData })
+    await profileData.updateOne({username:decodedToken.username},{image:imageData})
+    console.log("user find")
   }
   else{  
-    if (req.file) {
+    if (req.file) {no
     saving = await profileData.create({username:decodedToken.username,image:imageData})
     if (saving){
       res.send({ success: true, data: imageData })
@@ -406,7 +413,55 @@ app.get('/findorganizers', authenticateToken, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
+app.post('/bio',authenticateToken,async(req,res)=>{
+  console.log(req.body)
+  const authorizationHeader = req.headers.authorization;
+  const token = authorizationHeader.split(' ')[1];
+  const decodedToken = jwt.decode(token);
+  console.log(decodedToken.username)
+  updateData = await profileData.updateOne({username:decodedToken.username}
+    ,{gender:req.body.gender,age:req.body.age,contact:req.body.contact,intrest:req.body.interests})
+    if (updateData){
+      res.send(true)
+    }
+  })
+  app.get('/bio', authenticateToken, async (req, res) => {
+    try {
+      const authorizationHeader = req.headers.authorization;
+      const token = authorizationHeader.split(' ')[1];
+      const decodedToken = jwt.decode(token);
+      
+      const foundUser = await profileData.findOne({ username: decodedToken.username });
+  
+      if (foundUser) {
+        const { gender, age , contact , intrest } = foundUser;
+        const allFieldsFilled = gender !== undefined && age !== undefined && contact !== undefined && intrest !== undefined;
+        console.log(allFieldsFilled);
+        res.send(allFieldsFilled);
+      } else {
+        res.send(false);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  });
+  app.post('/profile', authenticateToken, async (req, res) => {
+    try {
+      const authorizationHeader = req.headers.authorization;
+      const token = authorizationHeader.split(' ')[1];
+      const decodedToken = jwt.decode(token);
+      const foundUser = await profileData.findOne({ username: decodedToken.username },{image:1,intrest:1});
+      console.log(foundUser)
+      res.send({
+        username: decodedToken.username,
+        image: foundUser.image,
+        interest: foundUser.intrest
+      });
+    console.log("in here") 
+    } catch (error) {
+      console.error(error);
+    }
+  });
 app.listen(3002,() => {
   console.log('Server is listening');
 });
